@@ -1,15 +1,13 @@
-# Phoenix Static Buildpack
+# Plug Static Buildpack
 
 ## Purpose
 
-This buildpack is meant to be used with the [Heroku Buildpack for Elixir](https://github.com/HashNuke/heroku-buildpack-elixir). When deploying Phoenix apps to Heroku, static assets will need to be compiled. This buildpack sees to it that static assets are compiled and that a corresponding asset manifest is generated.
+This buildpack is meant to be used with the [Heroku Buildpack for Elixir](https://github.com/HashNuke/heroku-buildpack-elixir). When deploying Plug.Router apps to Heroku, static assets will need to be compiled. This buildpack sees to it that static assets are compiled.
 
 ## Features
 * Easily customizable to your build needs with its `compile` hook!
 * Works much like the [Heroku Buildpack for Elixir](https://github.com/HashNuke/heroku-buildpack-elixir)!
-* **Easy configuration** with `phoenix_static_buildpack.config` file
-* Automatically sets `DATABASE_URL`
-* If your app doesn't have a Procfile, default web task `mix phx.server` will be run
+* **Easy configuration** with `plug_static_buildpack.config` file
 * Can configure versions for Node and NPM
 * Auto-installs Bower deps if `bower.json` is in your app's root path
 * Caches Node, NPM modules and Bower components
@@ -22,7 +20,7 @@ heroku apps:create my_heroku_app
 
 # Set and add the buildpacks for your Heroku app
 heroku buildpacks:set https://github.com/HashNuke/heroku-buildpack-elixir
-heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static
+heroku buildpacks:add https://github.com/classicalacademicpress/heroku-buildpack-plug-static
 
 # Deploy
 git push heroku master
@@ -52,9 +50,9 @@ heroku buildpacks:add https://github.com/heroku/heroku-buildpack-ruby
 
 ## Configuration
 
-Create a `phoenix_static_buildpack.config` file in your app's root dir if you want to override the defaults. The file's syntax is bash.
+Create a `plug_static_buildpack.config` file in your app's root dir if you want to override the defaults. The file's syntax is bash.
 
-If you don't specify a config option, then the default option from the buildpack's [`phoenix_static_buildpack.config`](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/phoenix_static_buildpack.config) file will be used.
+If you don't specify a config option, then the default option from the buildpack's [`plug_static_buildpack.config`](https://github.com/classicalacademicpress/heroku-buildpack-plug-static/blob/master/plug_static_buildpack.config) file will be used.
 
 
 __Here's a full config file with all available options:__
@@ -75,23 +73,17 @@ npm_version=2.10.1
 # We can set the version of Yarn to use for the app here
 yarn_version=1.13.0
 
-# We can set the path to phoenix app. E.g. apps/phoenix_app when in umbrella.
-phoenix_relative_path=.
+# We can set the path to plug app
+plug_relative_path=.
 
 # Remove node and node_modules directory to keep slug size down if it is not needed.
 remove_node=false
 
-# We can change path that npm dependencies are in relation to phoenix app. E.g. assets for phoenix 1.3 support.
+# We can change path that npm dependencies are in relation to the app
 assets_path=.
-
-# We can change phoenix mix namespace tasks. E.g. `phoenix` for phoenix < 1.3 support.
-phoenix_ex=phx
 ```
 
 ## Compile
-
-By default, Phoenix uses `brunch` and recommends you to use `mix phx.digest` in production. For that, we have a default `compile` shell script which gets run after building dependencies and
-just before finalizing the build. The `compile` file [looks like this](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
 
 To customize your app's compile hook, just add a `compile` file to your app's root directory.
 `compile` is just a shell script, so you can use any valid `bash` code. Keep in mind you'll have
@@ -99,9 +91,8 @@ access to your `node_modules` and `mix`. This means that if you're using a Node 
 
 ```bash
 # app_root/compile
-cd $phoenix_dir
+cd $plug_dir
 npm --prefix ./assets run build
-mix "${phoenix_ex}.digest" #use the ${phoenix_ex} variable instead of hardcoding phx or phoenix
 ```
 
 The above `compile` overrides the default one. :)
@@ -110,23 +101,8 @@ The above `compile` overrides the default one. :)
 ## FAQ
 
 1. When to use?
-- This buildpack is only necessary when you need to compile static assets during deploys. You will not need this buildpack if you are using Phoenix only as a REST API.
+- This buildpack is only necessary when you need to compile static assets during deploys.
 
 2. Do I need `heroku-buildpack-nodejs` with this?
 - No, this buildpack installs Node for you. How it differs from the NodeJS buildpack
 is that it adds `mix` to the PATH so you can run `mix` commands like `mix phx.digest`.
-
-3. I am getting an error `Command "deploy" not found.` even though my previous deploys used to work. How to fix?
-- The default `compile` file, which are a set of commands ran during the buildpack's compile hook, was replaced to be compatible with Phoenix versions 1.4 and above. If using brunch and older versions of Phoenix, you will need to add a custom `compile` in your app's root directory that looks like:
-
-```bash
-brunch build --production
-
-cd $phoenix_dir
-
-mix "${phoenix_ex}.digest"
-
-if mix help "${phoenix_ex}.digest.clean" 1>/dev/null 2>&1; then
-  mix "${phoenix_ex}.digest.clean"
-fi
-```

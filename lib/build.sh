@@ -4,7 +4,6 @@ cleanup_cache() {
     info "Cleaning out cache contents"
     rm -rf $cache_dir/npm-version
     rm -rf $cache_dir/node-version
-    rm -rf $cache_dir/phoenix-static
     rm -rf $cache_dir/yarn-cache
     rm -rf $cache_dir/node_modules
     cleanup_old_node
@@ -166,9 +165,7 @@ install_bower_deps() {
 }
 
 compile() {
-  cd $phoenix_dir
-  PATH=$build_dir/.platform_tools/erlang/bin:$PATH
-  PATH=$build_dir/.platform_tools/elixir/bin:$PATH
+  cd $plug_dir
 
   run_compile
 }
@@ -176,16 +173,7 @@ compile() {
 run_compile() {
   local custom_compile="${build_dir}/${compile}"
 
-  cd $phoenix_dir
-
-  has_clean=$(mix help "${phoenix_ex}.digest.clean" 1>/dev/null 2>&1; echo $?)
-
-  if [ $has_clean = 0 ]; then
-    mkdir -p $cache_dir/phoenix-static
-    info "Restoring cached assets"
-    mkdir -p priv
-    rsync -a -v --ignore-existing $cache_dir/phoenix-static/ priv/static
-  fi
+  cd $plug_dir
 
   cd $assets_dir
 
@@ -195,13 +183,6 @@ run_compile() {
   else
     info "Running default compile"
     source ${build_pack_dir}/${compile} 2>&1 | indent
-  fi
-
-  cd $phoenix_dir
-
-  if [ $has_clean = 0 ]; then
-    info "Caching assets"
-    rsync -a --delete -v priv/static/ $cache_dir/phoenix-static
   fi
 }
 
@@ -222,8 +203,8 @@ finalize_node() {
 write_profile() {
   info "Creating runtime environment"
   mkdir -p $build_dir/.profile.d
-  local export_line="export PATH=\"\$HOME/.heroku/node/bin:\$HOME/.heroku/yarn/bin:\$HOME/bin:\$HOME/$phoenix_relative_path/node_modules/.bin:\$PATH\""
-  echo $export_line >> $build_dir/.profile.d/phoenix_static_buildpack_paths.sh
+  local export_line="export PATH=\"\$HOME/.heroku/node/bin:\$HOME/.heroku/yarn/bin:\$HOME/bin:\$HOME/$plug_relative_path/node_modules/.bin:\$PATH\""
+  echo $export_line >> $build_dir/.profile.d/plug_static_buildpack_paths.sh
 }
 
 remove_node() {

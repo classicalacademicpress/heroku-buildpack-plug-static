@@ -4,7 +4,7 @@ mix_file_url="$1/mix.exs"
 
 if [ -f $mix_file_url ];
 then
-  echo "Phoenix"
+  echo "Plug.Static"
   exit 0
 else
   exit 1

@@ -25,47 +25,44 @@ file_contents() {
 load_config() {
   info "Loading config..."
 
-  local custom_config_file="${build_dir}/phoenix_static_buildpack.config"
+  local custom_config_file="${build_dir}/plug_static_buildpack.config"
 
   # Source for default versions file from buildpack first
-  source "${build_pack_dir}/phoenix_static_buildpack.config"
+  source "${build_pack_dir}/plug_static_buildpack.config"
 
   if [ -f $custom_config_file ]; then
     source $custom_config_file
   else
-    info "The config file phoenix_static_buildpack.config wasn't found"
-    info "Using the default config provided from the Phoenix static buildpack"
+    info "The config file plug_static_buildpack.config wasn't found"
+    info "Using the default config provided from the buildpack"
   fi
 
   fix_node_version
   fix_npm_version
 
-  phoenix_dir=$build_dir/$phoenix_relative_path
+  plug_dir=$build_dir/$plug_relative_path
 
   info "Detecting assets directory"
-  if [ -f "$phoenix_dir/$assets_path/package.json" ]; then
-    # Check phoenix custom sub-directory for package.json
+  if [ -f "$plug_dir/$assets_path/package.json" ]; then
+    # Check plug custom sub-directory for package.json
     info "* package.json found in custom directory"
-  elif [ -f "$phoenix_dir/package.json" ]; then
-    # Check phoenix root directory for package.json, phoenix 1.2.x and prior
+  elif [ -f "$plug_dir/package.json" ]; then
+    # Check plug root directory for package.json, plug 1.2.x and prior
     info "WARNING: package.json detected in root "
-    info "* assuming phoenix 1.2.x or prior, please check config file"
+    info "* assuming plug 1.2.x or prior, please check config file"
 
     assets_path=.
-    phoenix_ex=phoenix
   else
-    # Check phoenix custom sub-directory for package.json, phoenix 1.3.x and later
+    # Check plug custom sub-directory for package.json, plug 1.3.x and later
     info "WARNING: no package.json detected in root nor custom directory"
-    info "* assuming phoenix 1.3.x and later, please check config file"
+    info "* assuming plug 1.3.x and later, please check config file"
 
     assets_path=assets
-    phoenix_ex=phx
   fi
 
-  assets_dir=$phoenix_dir/$assets_path
-  info "Will use phoenix configuration:"
+  assets_dir=$plug_dir/$assets_path
+  info "Will use plug configuration:"
   info "* assets path ${assets_path}"
-  info "* mix tasks namespace ${phoenix_ex}"
 
   info "Will use the following versions:"
   info "* Node ${node_version}"
